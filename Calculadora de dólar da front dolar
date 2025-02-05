@@ -1,0 +1,35 @@
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.IOException;
+
+public class ConversorMoeda {
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        double valorReais = 100.0; // Exemplo de valor em reais
+        double valorDolar = calcularDolar(valorReais);
+        System.out.printf("%.2f BRL equivalem a %.2f USD%n", valorReais, valorDolar);
+    }
+
+    private static double calcularDolar(double valorEmReais) throws IOException, InterruptedException {
+        double taxaCambio = obterTaxaCambio();
+        return valorEmReais * taxaCambio;
+    }
+
+    private static double obterTaxaCambio() throws IOException, InterruptedException {
+        String url = "https://api.exchangerate-api.com/v4/latest/BRL";
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        String responseBody = response.body();
+        
+        JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
+        return jsonObject.getAsJsonObject("rates").get("USD").getAsDouble();
+    }
+}
